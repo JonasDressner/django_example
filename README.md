@@ -15,6 +15,14 @@ python manage.py runserver
 
 Danach ist die Übersicht unter http://127.0.0.1:8000 erreichbar.
 
+Das Projekt wurde mit Python 3.14 entwickelt und getestet.
+
+## Testdaten aus CSV
+
+Standardmäßig verwendet die Anwendung die reproduzierbaren Beispieldaten aus
+`data/transactions.csv`. Dadurch kann die Anwendung lokal ausgeführt und getestet
+werden, ohne dass eine MongoDB-Instanz erforderlich ist.
+
 ## MongoDB verwenden
 
 MongoDB lokal starten:
