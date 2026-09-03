@@ -1,12 +1,16 @@
+"""HTTP views for displaying transactions."""
+
 from datetime import date
 
 from django.core.paginator import Paginator
+from django.http import HttpRequest, HttpResponse
 from django.shortcuts import render
 
 from .services import get_transaction_repository
 
 
-def transaction_list(request):
+def transaction_list(request: HttpRequest) -> HttpResponse:
+    """Render the filtered and paginated transaction list."""
     date_from = _parse_date(request.GET.get("date_from"))
     date_to = _parse_date(request.GET.get("date_to"))
     transaction_type = request.GET.get("transaction_type", "")
@@ -26,7 +30,8 @@ def transaction_list(request):
     return render(request, "transactions/list.html", context)
 
 
-def _parse_date(value):
+def _parse_date(value: str | None) -> date | None:
+    """Parse an ISO date query parameter."""
     try:
         return date.fromisoformat(value) if value else None
     except ValueError:

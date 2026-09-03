@@ -1,21 +1,57 @@
+"""Repository implementations for CSV and MongoDB transactions."""
+
 from datetime import date
 from decimal import Decimal
-from typing import Protocol
+from pathlib import Path
+from typing import Protocol, TypedDict
 
 from .domain import Transaction
 
 
-class TransactionRepository(Protocol):
-    def list(self, *, transaction_type: str = "", date_from: date | None = None, date_to: date | None = None) -> list[Transaction]: ...
+class TransactionDocument(TypedDict):
+    """Define the fields stored for a transaction in MongoDB."""
 
-    def count(self) -> int: ...
+    transaction_id: str
+    transaction_date: str
+    transaction_type: str
+    quantity_grams: float
+    price_eur: float
+    counterparty: str
+
+
+class TransactionRepository(Protocol):
+    """Define the interface shared by transaction data sources."""
+
+    def list(
+        self,
+        *,
+        transaction_type: str = "",
+        date_from: date | None = None,
+        date_to: date | None = None,
+    ) -> list[Transaction]:
+        """Return transactions matching the optional filters."""
+        ...
+
+    def count(self) -> int:
+        """Return the total number of transactions."""
+        ...
 
 
 class CsvTransactionRepository:
-    def __init__(self, csv_path):
+    """Read transactions from a CSV file."""
+
+    def __init__(self, csv_path: Path) -> None:
+        """Initialize the repository with a CSV file path."""
         self.csv_path = csv_path
 
-    def list(self, *, transaction_type="", date_from=None, date_to=None):
+    def list(
+        self,
+        *,
+        transaction_type: str = "",
+        date_from: date | None = None,
+        date_to: date | None = None,
+    ) -> list[Transaction]:
+        """Return CSV transactions matching the optional filters."""
         import csv
 
         transactions = []
@@ -29,27 +65,43 @@ class CsvTransactionRepository:
                     price_eur=Decimal(row["price_eur"]),
                     counterparty=row["counterparty"],
                 )
-                if transaction_type and transaction.transaction_type != transaction_type:
+                if (
+                    transaction_type
+                    and transaction.transaction_type != transaction_type
+                ):
                     continue
                 if date_from and transaction.transaction_date < date_from:
                     continue
                 if date_to and transaction.transaction_date > date_to:
                     continue
                 transactions.append(transaction)
-        return sorted(transactions, key=lambda item: item.transaction_date, reverse=True)
+        return sorted(
+            transactions, key=lambda item: item.transaction_date, reverse=True
+        )
 
-    def count(self):
+    def count(self) -> int:
+        """Return the number of transactions in the CSV file."""
         return len(self.list())
 
 
 class MongoTransactionRepository:
-    def __init__(self, uri, database, collection):
+    """Read transactions from a MongoDB collection."""
+
+    def __init__(self, uri: str, database: str, collection: str) -> None:
+        """Initialize the repository with MongoDB connection settings."""
         from pymongo import MongoClient
 
         self.client = MongoClient(uri, serverSelectionTimeoutMS=2000)
         self.collection = self.client[database][collection]
 
-    def list(self, *, transaction_type="", date_from=None, date_to=None):
+    def list(
+        self,
+        *,
+        transaction_type: str = "",
+        date_from: date | None = None,
+        date_to: date | None = None,
+    ) -> list[Transaction]:
+        """Return MongoDB transactions matching the optional filters."""
         query = {}
         if transaction_type:
             query["transaction_type"] = transaction_type
@@ -59,13 +111,18 @@ class MongoTransactionRepository:
                 query["transaction_date"]["$gte"] = date_from.isoformat()
             if date_to:
                 query["transaction_date"]["$lte"] = date_to.isoformat()
-        return [self._to_domain(document) for document in self.collection.find(query).sort("transaction_date", -1)]
+        return [
+            self._to_domain(document)
+            for document in self.collection.find(query).sort("transaction_date", -1)
+        ]
 
-    def count(self):
+    def count(self) -> int:
+        """Return the number of documents in the collection."""
         return self.collection.count_documents({})
 
     @staticmethod
-    def _to_domain(document):
+    def _to_domain(document: TransactionDocument) -> Transaction:
+        """Convert a MongoDB document into a domain transaction."""
         return Transaction(
             transaction_id=document["transaction_id"],
             transaction_date=date.fromisoformat(document["transaction_date"]),

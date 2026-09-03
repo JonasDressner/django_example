@@ -1,0 +1,1 @@
+"""Gold transaction application package."""

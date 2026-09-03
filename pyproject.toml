@@ -1,0 +1,23 @@
+[tool.ruff]
+line-length = 88
+exclude = [
+    ".venv/",
+    "data/",
+]
+
+[tool.ruff.lint]
+select = [
+    "ANN",
+    "D",
+    "E",
+    "F",
+    "W",
+]
+
+[tool.black]
+line-length = 88
+exclude = '''
+/(\
+    \.venv/|
+    data/
+)'''

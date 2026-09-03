@@ -1,6 +1,6 @@
-# Aurum Ledger
+# Goldtransaktionen - Django & MongoDB
 
-Ein vorzeigbares Django-Beispielprojekt zur Darstellung von Goldtransaktionen. Die Anwendung startet standardmäßig mit lokalen CSV-Testdaten und kann über dieselbe Repository-Schnittstelle auf MongoDB umgeschaltet werden.
+Django-Anwendung zur Verwaltung und Anzeige von Goldtransaktionen mit CSV- und MongoDB-Datenquellen.
 
 ## Schnellstart
 
@@ -9,6 +9,7 @@ python -m venv .venv
 .venv\Scripts\Activate.ps1
 pip install -r requirements.txt
 Copy-Item .env.example .env
+pre-commit install
 python manage.py runserver
 ```
 
@@ -30,6 +31,7 @@ In `.env` `TRANSACTION_DATA_SOURCE=mongo` setzen und den Server neu starten. Der
 ```powershell
 python manage.py check
 pytest
+pre-commit run --all-files
 ```
 
 ## Architektur
