@@ -1,0 +1,17 @@
+{% load static %}
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Transaktionsbuch{% endblock %}</title>
+  <link rel="stylesheet" href="{% static 'css/site.css' %}">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="{% url 'transaction-list' %}">Transaktionsbuch</a>
+    <span class="status">Bericht · Goldhandel</span>
+  </header>
+  <main class="shell">{% block content %}{% endblock %}</main>
+</body>
+</html>

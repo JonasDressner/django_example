@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+{% block title %}Transaktionsbuch | Bericht{% endblock %}
+{% block content %}
+<section class="page-heading">
+  <div><p class="eyebrow">BERICHT · TRANSAKTIONEN</p><h1>Transaktionsbuch</h1></div>
+  <p class="report-meta">Berichtszeitraum: 01.01.2026 – 31.12.2026<br>Währung: EUR · Gewicht: Gramm</p>
+</section>
+<section class="summary-row">
+  <div><span class="summary-label">Gefilterte Datensätze</span><strong>{{ total_count }}</strong></div>
+  <div><span class="summary-label">Ansicht</span><strong class="source">{% if transaction_type %}{{ transaction_type|lower }}{% else %}alle{% endif %}</strong></div>
+</section>
+<form class="filters" method="get">
+  <div class="filter-title">Filter</div>
+  <label>Transaktionstyp<select name="transaction_type"><option value="">Alle Typen</option><option value="PURCHASE" {% if transaction_type == 'PURCHASE' %}selected{% endif %}>Kauf</option><option value="SALE" {% if transaction_type == 'SALE' %}selected{% endif %}>Verkauf</option></select></label>
+  <label>Von<input type="date" name="date_from" value="{{ date_from }}"></label>
+  <label>Bis<input type="date" name="date_to" value="{{ date_to }}"></label>
+  <button type="submit">Anwenden</button>
+  <a class="reset" href="{% url 'transaction-list' %}">Zurücksetzen</a>
+</form>
+<div class="table-wrap"><table><thead><tr><th>ID</th><th>Datum</th><th>Typ</th><th>Partner</th><th class="number">Menge</th><th class="number">Preis / g</th><th class="number">Gesamt</th></tr></thead><tbody>{% for transaction in page %}<tr><td class="id">{{ transaction.transaction_id }}</td><td>{{ transaction.transaction_date|date:'d.m.Y' }}</td><td><span class="badge {{ transaction.transaction_type|lower }}">{% if transaction.transaction_type == 'PURCHASE' %}Kauf{% else %}Verkauf{% endif %}</span></td><td>{{ transaction.counterparty }}</td><td class="number">{{ transaction.quantity_grams|floatformat:2 }} g</td><td class="number">{{ transaction.price_eur|floatformat:2 }} EUR</td><td class="number total">{{ transaction.total_eur|floatformat:2 }} EUR</td></tr>{% empty %}<tr><td class="empty" colspan="7">Keine Transaktionen für diese Auswahl.</td></tr>{% endfor %}</tbody></table></div>
+{% if page.has_other_pages %}<nav class="pagination"><span>Seite {{ page.number }} von {{ page.paginator.num_pages }}</span><span>{% if page.has_previous %}<a href="?page={{ page.previous_page_number }}&transaction_type={{ transaction_type }}&date_from={{ date_from }}&date_to={{ date_to }}">← Zurück</a>{% endif %}{% if page.has_next %}<a href="?page={{ page.next_page_number }}&transaction_type={{ transaction_type }}&date_from={{ date_from }}&date_to={{ date_to }}">Weiter →</a>{% endif %}</span></nav>{% endif %}
+{% endblock %}
