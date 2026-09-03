@@ -55,3 +55,28 @@ class TransactionViewTests(TestCase):
         response = self.client.get("/")
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Transaktionsbuch")
+
+    def test_filters_transactions_by_type(self) -> None:
+        """Render only transactions matching the selected type."""
+        response = self.client.get("/", {"transaction_type": "SALE"})
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "GT-1012")
+        self.assertNotContains(response, "GT-1011")
+        self.assertContains(response, "Gefilterte Datensätze")
+
+    def test_paginates_transactions(self) -> None:
+        """Render the second page of transactions."""
+        response = self.client.get("/", {"page": 2})
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "GT-1002")
+        self.assertNotContains(response, "GT-1012")
+        self.assertContains(response, "Seite 2 von 2")
+
+    def test_invalid_dates_do_not_break_the_view(self) -> None:
+        """Ignore invalid date filters while preserving their form values."""
+        response = self.client.get(
+            "/", {"date_from": "not-a-date", "date_to": "2026-06-27"}
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'value="not-a-date"')
+        self.assertContains(response, 'value="2026-06-27"')

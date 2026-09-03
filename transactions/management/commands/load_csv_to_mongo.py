@@ -27,10 +27,6 @@ class Command(BaseCommand):
 
     def handle(self, *args: object, **options: object) -> None:
         """Import CSV rows into the configured MongoDB collection."""
-        client = MongoClient(settings.MONGODB_URI)
-        collection = client[settings.MONGODB_DATABASE][settings.MONGODB_COLLECTION]
-        if bool(options["clear"]):
-            collection.delete_many({})
         file_path = options["file"]
         if not isinstance(file_path, Path):
             raise TypeError("The --file argument must be a Path")
@@ -39,17 +35,21 @@ class Command(BaseCommand):
         for document in documents:
             document["quantity_grams"] = float(document["quantity_grams"])
             document["price_eur"] = float(document["price_eur"])
-        collection.create_index("transaction_id", unique=True)
-        result = collection.bulk_write(
-            [
-                UpdateOne(
-                    {"transaction_id": document["transaction_id"]},
-                    {"$set": document},
-                    upsert=True,
-                )
-                for document in documents
-            ]
-        )
+        with MongoClient(settings.MONGODB_URI) as client:
+            collection = client[settings.MONGODB_DATABASE][settings.MONGODB_COLLECTION]
+            if bool(options["clear"]):
+                collection.delete_many({})
+            collection.create_index("transaction_id", unique=True)
+            result = collection.bulk_write(
+                [
+                    UpdateOne(
+                        {"transaction_id": document["transaction_id"]},
+                        {"$set": document},
+                        upsert=True,
+                    )
+                    for document in documents
+                ]
+            )
         self.stdout.write(
             self.style.SUCCESS(
                 f"{len(documents)} Datensätze importiert ({result.upserted_count} neu)."

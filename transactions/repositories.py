@@ -1,40 +1,14 @@
 """Repository implementations for CSV and MongoDB transactions."""
 
+import csv
+
 from datetime import date
 from decimal import Decimal
 from pathlib import Path
-from typing import Protocol, TypedDict
+from typing import TypedDict
+from pymongo import MongoClient
 
 from .domain import Transaction
-
-
-class TransactionDocument(TypedDict):
-    """Define the fields stored for a transaction in MongoDB."""
-
-    transaction_id: str
-    transaction_date: str
-    transaction_type: str
-    quantity_grams: float
-    price_eur: float
-    counterparty: str
-
-
-class TransactionRepository(Protocol):
-    """Define the interface shared by transaction data sources."""
-
-    def list(
-        self,
-        *,
-        transaction_type: str = "",
-        date_from: date | None = None,
-        date_to: date | None = None,
-    ) -> list[Transaction]:
-        """Return transactions matching the optional filters."""
-        ...
-
-    def count(self) -> int:
-        """Return the total number of transactions."""
-        ...
 
 
 class CsvTransactionRepository:
@@ -52,7 +26,6 @@ class CsvTransactionRepository:
         date_to: date | None = None,
     ) -> list[Transaction]:
         """Return CSV transactions matching the optional filters."""
-        import csv
 
         transactions = []
         with self.csv_path.open(newline="", encoding="utf-8") as csv_file:
@@ -79,9 +52,16 @@ class CsvTransactionRepository:
             transactions, key=lambda item: item.transaction_date, reverse=True
         )
 
-    def count(self) -> int:
-        """Return the number of transactions in the CSV file."""
-        return len(self.list())
+
+class TransactionDocument(TypedDict):
+    """Define the fields stored for a transaction in MongoDB."""
+
+    transaction_id: str
+    transaction_date: str
+    transaction_type: str
+    quantity_grams: float
+    price_eur: float
+    counterparty: str
 
 
 class MongoTransactionRepository:
@@ -89,7 +69,6 @@ class MongoTransactionRepository:
 
     def __init__(self, uri: str, database: str, collection: str) -> None:
         """Initialize the repository with MongoDB connection settings."""
-        from pymongo import MongoClient
 
         self.client = MongoClient(uri, serverSelectionTimeoutMS=2000)
         self.collection = self.client[database][collection]
@@ -115,10 +94,6 @@ class MongoTransactionRepository:
             self._to_domain(document)
             for document in self.collection.find(query).sort("transaction_date", -1)
         ]
-
-    def count(self) -> int:
-        """Return the number of documents in the collection."""
-        return self.collection.count_documents({})
 
     @staticmethod
     def _to_domain(document: TransactionDocument) -> Transaction:
