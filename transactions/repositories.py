@@ -26,7 +26,6 @@ class CsvTransactionRepository:
         date_to: date | None = None,
     ) -> list[Transaction]:
         """Return CSV transactions matching the optional filters."""
-
         transactions = []
         with self.csv_path.open(newline="", encoding="utf-8") as csv_file:
             for row in csv.DictReader(csv_file):
@@ -69,7 +68,6 @@ class MongoTransactionRepository:
 
     def __init__(self, uri: str, database: str, collection: str) -> None:
         """Initialize the repository with MongoDB connection settings."""
-
         self.client = MongoClient(uri, serverSelectionTimeoutMS=2000)
         self.collection = self.client[database][collection]
 
