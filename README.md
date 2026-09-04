@@ -15,7 +15,8 @@ python manage.py runserver
 
 Danach ist die Übersicht unter http://127.0.0.1:8000 erreichbar.
 
-Das Projekt wurde mit Python 3.14 entwickelt und getestet.
+Das Projekt wurde mit Python 3.14 unter Windows 10 entwickelt und getestet.
+Für den Betrieb der MongoDB wird eine Docker-Installation benötigt.
 
 ## Testdaten aus CSV
 
